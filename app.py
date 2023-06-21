@@ -1,20 +1,8 @@
 import streamlit as st
 import logging
 from telegram import __version__ as TG_VER
-
-try:
-    from telegram import __version_info__
-except ImportError:
-    __version_info__ = (0, 0, 0, 0, 0)  # type: ignore[assignment]
-
-if __version_info__ < (20, 0, 0, "alpha", 1):
-    raise RuntimeError(
-        f"This example is not compatible with your current PTB version {TG_VER}. To view the "
-        f"{TG_VER} version of this example, "
-        f"visit https://docs.python-telegram-bot.org/en/v{TG_VER}/examples.html"
-    )
-from telegram import Update, ForceReply
-from telegram.ext import CommandHandler, ContextTypes, MessageHandler, filters
+from telegram import Bot, Update, ForceReply
+from telegram.ext import CommandHandler, MessageHandler, Filters, Updater
 
 # Enable logging
 logging.basicConfig(
@@ -27,23 +15,23 @@ logger = logging.getLogger(__name__)
 
 
 # Define a few command handlers. These usually take the two arguments update and context.
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+def start(update: Update, context) -> None:
     """Send a message when the command /start is issued."""
     user = update.effective_user
-    await update.message.reply_html(
+    update.message.reply_html(
         rf"Hi {user.mention_html()}!",
         reply_markup=ForceReply(selective=True),
     )
 
 
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+def help_command(update: Update, context) -> None:
     """Send a message when the command /help is issued."""
-    await update.message.reply_text("Help!")
+    update.message.reply_text("Help!")
 
 
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+def echo(update: Update, context) -> None:
     """Echo the user message."""
-    await update.message.reply_text(update.message.text)
+    update.message.reply_text(update.message.text)
 
 
 def main() -> None:
@@ -52,34 +40,30 @@ def main() -> None:
     st.title("Telegram Bot Demo")
     st.write("Enter /start or /help commands to interact with the bot.")
 
-    # Create the bot handlers
-    start_handler = CommandHandler("start", start)
-    help_handler = CommandHandler("help", help_command)
-    echo_handler = MessageHandler(filters.TEXT & ~filters.COMMAND, echo)
+    # Create the bot and updater
+    bot = Bot(token="6262427395:AAF9cX0_nxPYKPNlW8Kwy6BcocFnkTRIQ-A")
+    updater = Updater(bot=bot, use_context=True)
 
-    # Get the Streamlit session state
-    session_state = st.session_state
+    # Get the dispatcher to register handlers
+    dispatcher = updater.dispatcher
 
-    # Check if the bot has been started
-    if "bot_started" not in session_state:
-        # Start the bot and add the handlers
-        application = Application.builder().token("6262427395:AAF9cX0_nxPYKPNlW8Kwy6BcocFnkTRIQ-A").build()
-        application.add_handler(start_handler)
-        application.add_handler(help_handler)
-        application.add_handler(echo_handler)
-        session_state["bot_started"] = True
+    # Register command handlers
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("help", help_command))
 
-        # Run the bot until the user presses Ctrl-C
-        application.run_polling(allowed_updates=Update.ALL_TYPES)
+    # Register message handler
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
+
+    # Start the bot
+    updater.start_polling()
 
     # Display success or failure message
-    if "bot_response" in session_state:
-        response = session_state.pop("bot_response")
-        st.success(response)
-    elif "bot_error" in session_state:
-        error = session_state.pop("bot_error")
-        st.error(error)
+    if updater.running:
+        st.success("Bot started successfully!")
+    else:
+        st.error("Failed to start the bot.")
 
 
 if __name__ == "__main__":
     main()
+
