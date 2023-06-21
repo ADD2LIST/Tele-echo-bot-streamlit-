@@ -2,7 +2,7 @@ import streamlit as st
 import logging
 from telegram import __version__ as TG_VER
 from telegram import Bot, Update, ForceReply
-from telegram.ext import CommandHandler, MessageHandler, Filters, Updater
+from telegram.ext import CommandHandler, MessageHandler, filters, Updater
 
 # Enable logging
 logging.basicConfig(
