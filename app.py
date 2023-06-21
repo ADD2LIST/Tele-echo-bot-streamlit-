@@ -63,7 +63,7 @@ def main() -> None:
     # Check if the bot has been started
     if "bot_started" not in session_state:
         # Start the bot and add the handlers
-        application = Application.builder().token("YOUR_BOT_TOKEN").build()
+        application = Application.builder().token("6262427395:AAF9cX0_nxPYKPNlW8Kwy6BcocFnkTRIQ-A").build()
         application.add_handler(start_handler)
         application.add_handler(help_handler)
         application.add_handler(echo_handler)
